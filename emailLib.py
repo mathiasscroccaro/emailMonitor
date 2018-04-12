@@ -1,10 +1,17 @@
 import datetime
 import gmailreader
 import gmailsender
+import pygame
+import pygame.camera
+import os, fnmatch
 
 class emailLib():
 
     def __init__(self,user,password):
+
+        pygame.init()
+        pygame.camera.init()
+        self.cam = pygame.camera.Camera('/dev/video0',(640,480))
 
         self.user = user
         self.password = password
@@ -34,15 +41,38 @@ class emailLib():
 
     def generateAttachments(self):
 
-        pass
+        self.cam.start()
+        image = self.cam.get_image()
+        self.cam.stop()
+
+        lastImage = datetime.datetime.now().strftime("attachments/%H:%M:%S-%d-%m-%y.jpg")
+        pygame.image.save(image,lastImage)
+
+        ### FIX IT - ADD TEXT WITH SENSOR DATA
+        #attachments = self.find("*.txt","./attachments/")
+        attachments = []
+
+        return attachments.append(lastImage)
+
+    def find(self,pattern,path):
+        result = []
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                if fnmatch.fnmatch(name,pattern):
+                    result.append(os.path.join(root,name))
+        return result
 
     def replyMessage(self):
 
-        self.generateAttachments()
+        subject = "[GROW - NOREPLY]"
 
-        msg = gmailsender.Message('[GROW - NOREPLY]',to='mathias.scroccaro@gmail.com',text='Hello',attachments=['img.jpg'])
+        body = """
+        Hello grower!
+
+        This is a robot made reply message. Attachments are image of the grow and sensoring data.
+
+        Peace out!
+        """
+
+        msg = gmailsender.Message(subject,to=self.user,text=body,attachments=self.generateAttachments())
         self.sender.send(msg)
-
-
-
-        #request.fetch()

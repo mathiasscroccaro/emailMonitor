@@ -1,7 +1,7 @@
 import emailLib
 
 def main():
-    fileObj = open('/home/mathias/emailMonitor/credentials','r')
+    fileObj = open('credentials','r')
     credentials = fileObj.read().split(':')
     user = credentials[0]
     password = credentials[1][:-1]
