@@ -31,28 +31,38 @@ class emailLib():
             for request in requests:
                 request.fetch()
                 if  request.subject == "[GROW]":
-                    request.delete()
+                    #request.delete()
                     self.processQuery(request.body)
 
     def processQuery(self,body):
 
-        exec(body)
-        self.replyMessage()
+        try:
+            exec(body)
+            self.replyMessage()
+        except:
+            error = "Error at the command the command: \n\n%s" % (body)
+            self.replyMessage(error)
 
     def generateAttachments(self):
 
-        self.cam.start()
-        image = self.cam.get_image()
-        self.cam.stop()
+        attachments = []
 
-        lastImage = datetime.datetime.now().strftime("attachments/%H:%M:%S-%d-%m-%y.jpg")
-        pygame.image.save(image,lastImage)
+        try:
+            self.cam.start()
+            image = self.cam.get_image()
+            self.cam.stop()
+
+            lastImage = datetime.datetime.now().strftime("./attachments/%H-%M-%S_%d-%b-%Y.jpg")
+            pygame.image.save(image,lastImage)
+
+            attachments.append(lastImage)
+        except:
+            pass
 
         ### FIX IT - ADD TEXT WITH SENSOR DATA
         #attachments = self.find("*.txt","./attachments/")
-        attachments = []
 
-        return attachments.append(lastImage)
+        return attachments
 
     def find(self,pattern,path):
         result = []
@@ -62,17 +72,22 @@ class emailLib():
                     result.append(os.path.join(root,name))
         return result
 
-    def replyMessage(self):
+    def replyMessage(self,error=""):
 
         subject = "[GROW - NOREPLY]"
+
+        attach = self.generateAttachments()
 
         body = """
         Hello grower!
 
         This is a robot made reply message. Attachments are image of the grow and sensoring data.
 
-        Peace out!
-        """
+        Program report:
 
-        msg = gmailsender.Message(subject,to=self.user,text=body,attachments=self.generateAttachments())
+        %s
+        Peace out!
+        """ % (error)
+
+        msg = gmailsender.Message(subject,to=self.user,text=body,attachments=attach)
         self.sender.send(msg)
